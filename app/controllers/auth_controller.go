@@ -15,7 +15,7 @@ import (
 
 type AuthController struct {
 	Service *services.AuthService
-	DB      *gorm.DB // Database instance
+	DB      *gorm.DB
 }
 
 func NewAuthController(service *services.AuthService) *AuthController {

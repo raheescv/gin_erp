@@ -30,5 +30,5 @@ func main() {
 	r := routes.SetupRouter(db)
 
 	// Run server
-	r.Run(":8082")
+	r.Run(":8083")
 }
