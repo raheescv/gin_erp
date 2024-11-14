@@ -15,9 +15,11 @@ import (
 
 func SetupRouter(db *gorm.DB) *gin.Engine {
 	router := gin.Default()
+	router.SetTrustedProxies([]string{"127.0.0.1", "185.52.55.147"})
+	router.Use(gin.Logger(), gin.Recovery())
 	// ALLOWED_ORIGIN := os.Getenv("ALLOWED_ORIGIN")
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOrigins:     []string{"https://studybackend.astraqatar.com", "http://studybackend.astraqatar.com"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -41,7 +43,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		productController := controllers.NewProductController(productService)
 
 		productRoutes := v1.Group("/products")
-		// productRoutes.Use(middleware.AuthMiddleware())
+		productRoutes.Use(middleware.AuthMiddleware())
 		{
 			productRoutes.POST("/get", productController.GetProducts)
 			productRoutes.POST("/create", productController.CreateProduct)
