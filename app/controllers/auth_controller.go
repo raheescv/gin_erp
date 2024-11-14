@@ -58,35 +58,52 @@ func (a *AuthController) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "user": user})
 }
 
-// Login handles user login
+// Login handles user login and token generation
 func (a *AuthController) Login(c *gin.Context) {
-	var request requests.LoginRequest
-
-	// Bind JSON body to LoginRequest struct
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
-	}
-
-	// Find user by email
 	var user models.User
-	if err := a.DB.Where("email = ?", request.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	// Check password
-	if !utils.CheckPasswordHash(request.Password, user.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+	// Validate user credentials (this is just an example, implement your logic)
+	var foundUser models.User
+	if err := a.DB.Where("email = ?", user.Email).First(&foundUser).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
-	// Generate JWT token (this part requires your JWT utility functions)
-	token, err := utils.GenerateJWT(user.ID) // Assuming GenerateJWT takes a user ID
+	// Here you should verify the password, using a function like HashPassword()
+	if err := utils.VerifyPassword(foundUser.Password, user.Password); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+
+	// Generate JWT token
+	token, err := utils.GenerateToken(foundUser.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": token})
+	// Return the token to the client
+	c.JSON(http.StatusOK, gin.H{
+		"status":      "success",
+		"message":     "Successfully generated token",
+		"token":       token,
+		"accessToken": token,
+	})
+}
+func (a *AuthController) Logout(c *gin.Context) {
+	var request struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// Delete the session from the database
+	a.DB.Where("refresh_token = ?", request.RefreshToken).Delete(&models.Session{})
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }

@@ -14,9 +14,9 @@ func NewProductService(repo *repositories.ProductRepository) *ProductService {
 	return &ProductService{Repo: repo}
 }
 
-func (s *ProductService) GetAllProducts(page, limit int) ([]models.Product, int64, error) {
+func (s *ProductService) GetAllProducts(page, limit int, sort string, order string) ([]models.Product, int64, error) {
 	offset := (page - 1) * limit
-	return s.Repo.GetAll(offset, limit)
+	return s.Repo.GetAll(offset, limit, sort, order)
 }
 
 func (s *ProductService) CreateProduct(product *models.Product) error {

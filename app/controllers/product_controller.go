@@ -22,8 +22,10 @@ func NewProductController(service *services.ProductService) *ProductController {
 func (ctrl *ProductController) GetProducts(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	sort := c.DefaultQuery("sort", "id")
+	order := c.DefaultQuery("order", "asc")
 
-	products, total, err := ctrl.Service.GetAllProducts(page, limit)
+	products, total, err := ctrl.Service.GetAllProducts(page, limit, sort, order)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving products"})
 		return
